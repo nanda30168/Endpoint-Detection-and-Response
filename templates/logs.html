@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DefendX Logs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background: linear-gradient(to right, #0d47a1, #1976d2, #0d47a1);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .container {
+            padding: 20px;
+        }
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .logs-table th, .logs-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .logs-table th {
+            background-color: #0d47a1;
+            color: #fff;
+        }
+        .download-button {
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: #1976d2;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .download-button:hover {
+            background-color: #0d47a1;
+        }
+    </style>
+    <script>
+        function fetchLogs() {
+            fetch('/logs')
+                .then(response => response.json())
+                .then(data => {
+                    updateTable(data);
+                })
+                .catch(error => console.error('Error fetching logs:', error));
+        }
+
+        function updateTable(data) {
+            const logsContainer = document.getElementById('logs');
+            logsContainer.innerHTML = ''; // Clear existing logs
+            const table = document.createElement('table');
+            table.classList.add('logs-table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            thead.innerHTML = `
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Event Type</th>
+                    <th>Process Name</th>
+                    <th>User</th>
+                    <th>Command Line</th>
+                    <th>Local Address</th>
+                    <th>Local Port</th>
+                    <th>Remote Address</th>
+                    <th>Remote Port</th>
+                    <th>File Path</th>
+                    <th>File Size</th>
+                    <th>Last Modified</th>
+                    <th>Severity</th>
+                    <th>Hostname</th>
+                    <th>MITRE Technique</th>
+                </tr>
+            `;
+
+            data.forEach(log => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td>${log.event_type}</td>
+                    <td>${log.process_name || 'N/A'}</td>
+                    <td>${log.user || 'N/A'}</td>
+                    <td>${log.command_line || 'N/A'}</td>
+                    <td>${log.local_address || 'N/A'}</td>
+                    <td>${log.local_port || 'N/A'}</td>
+                    <td>${log.remote_address || 'N/A'}</td>
+                    <td>${log.remote_port || 'N/A'}</td>
+                    <td>${log.file_path || 'N/A'}</td>
+                    <td>${log.file_size || 'N/A'}</td>
+                    <td>${log.last_modified ? new Date(log.last_modified).toLocaleString() : 'N/A'}</td>
+                    <td>${log.severity || 'N/A'}</td>
+                    <td>${log.hostname || 'N/A'}</td>
+                    <td>${log.mitre_technique || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            logsContainer.appendChild(table);
+        }
+
+        function downloadCSV() {
+            fetch('/logs')
+                .then(response => response.json())
+                .then(data => {
+                    const csvContent = [
+                        ['Timestamp', 'Event Type', 'Process Name', 'User', 'Command Line', 'Local Address', 'Local Port', 'Remote Address', 'Remote Port', 'File Path', 'File Size', 'Last Modified', 'Severity', 'Hostname', 'MITRE Technique'],
+                        ...data.map(log => [
+                            new Date(log.timestamp).toLocaleString(),
+                            log.event_type,
+                            log.process_name || 'N/A',
+                            log.user || 'N/A',
+                            log.command_line || 'N/A',
+                            log.local_address || 'N/A',
+                            log.local_port || 'N/A',
+                            log.remote_address || 'N/A',
+                            log.remote_port || 'N/A',
+                            log.file_path || 'N/A',
+                            log.file_size || 'N/A',
+                            log.last_modified ? new Date(log.last_modified).toLocaleString() : 'N/A',
+                            log.severity || 'N/A',
+                            log.hostname || 'N/A',
+                            log.mitre_technique || 'N/A'
+                        ])
+                    ].map(e => e.join(",")).join("\n");
+
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.setAttribute('href', url);
+                    a.setAttribute('download', 'logs.csv');
+                    a.click();
+                })
+                .catch(error => console.error('Error fetching logs:', error));
+        }
+
+        // Fetch logs every 10 seconds
+        setInterval(fetchLogs, 10000);
+
+        // Fetch logs on page load
+        window.onload = fetchLogs;
+    </script>
+</head>
+<body>
+    <header>
+        <h1>DefendX</h1>
+    </header>
+    <div class="container">
+        <button class="download-button" onclick="downloadCSV()">Download Logs as CSV</button>
+        <div id="logs"></div>
+    </div>
+</body>
+</html>
