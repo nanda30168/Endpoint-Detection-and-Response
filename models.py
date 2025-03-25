@@ -7,6 +7,7 @@ class Log(db.Model):
     event_type = db.Column(db.String(50))
     process_name = db.Column(db.String(100))
     pid = db.Column(db.Integer)
+    network_connection = db.Column(db.String(255), nullable=True) 
     ppid = db.Column(db.Integer)
     user = db.Column(db.String(50))
     command_line = db.Column(db.String(200))

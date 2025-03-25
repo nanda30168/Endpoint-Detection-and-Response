@@ -1,0 +1,35 @@
+2025-03-24 16:25:04,082 - __main__ - INFO - Starting EDR server as user: NANDAKHISHORE
+2025-03-24 16:25:04,087 - __main__ - INFO - Starting server on 0.0.0.0:5000 (debug=False)
+2025-03-24 16:25:04,099 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.228:5000
+2025-03-24 16:25:04,099 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-24 16:25:17,088 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:25:17] "GET / HTTP/1.1" 200 -
+2025-03-24 16:25:17,198 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:25:17] "GET /alerts/stream HTTP/1.1" 200 -
+2025-03-24 16:25:18,239 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:25:18] "GET /system-stats HTTP/1.1" 200 -
+2025-03-24 16:25:22,799 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:25:22] "GET /view_logs HTTP/1.1" 200 -
+2025-03-24 16:25:22,991 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:25:22] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:25:23,218 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:25:23] "GET /system-stats HTTP/1.1" 200 -
+2025-03-24 16:25:32,946 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:25:32] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:25:42,975 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:25:42] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:25:54,153 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:25:54] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:26:04,082 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:26:04] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:26:13,747 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:26:13] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:26:23,782 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:26:23] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:26:33,762 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:26:33] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:26:43,737 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:26:43] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:26:58,767 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:26:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:27:58,730 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:27:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:28:58,760 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:28:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:29:58,732 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:29:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:30:58,757 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:30:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:31:58,763 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:31:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:32:58,760 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:32:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:33:58,762 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:33:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:34:58,748 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:34:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:35:58,758 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:35:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:36:58,747 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:36:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:37:58,754 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:37:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:38:58,763 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:38:58] "GET /logs HTTP/1.1" 200 -
+2025-03-24 16:39:58,753 - werkzeug - INFO - 192.168.29.228 - - [24/Mar/2025 16:39:58] "GET /logs HTTP/1.1" 200 -

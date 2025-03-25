@@ -1,7 +1,7 @@
 import subprocess
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, session, Response
 from flask_migrate import Migrate
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pytz import timezone, utc
 from models import db, Log, Alert, Rule, Agent
 import psutil
@@ -59,7 +59,7 @@ def convert_utc_to_ist(utc_dt):
     ist = timezone('Asia/Kolkata')
     utc_dt = utc_dt.replace(tzinfo=utc)
     ist_dt = utc_dt.astimezone(ist)
-    return ist_dt.strftime('%Y-%m-%d %H:%M:%S %Z')
+    return ist_dt.strftime('%Y-%m-%d %H:%M:%S')
 
 def send_email(subject, body, to_email):
     msg = MIMEText(body)
@@ -178,34 +178,83 @@ def reconnect_agent():
     else:
         logging.debug(f"Agent {hostname} not found")
         return jsonify({"status": "error", "message": f"Agent {hostname} not found"}), 404
-
 @app.route('/logs')
-def get_logs():
+def get_logs():  # This was missing the @app.route decorator
     if 'logged_in' not in session:
         return redirect(url_for('login'))
-    logs = Log.query.order_by(Log.timestamp.desc()).all()
-    return jsonify([{
-        'timestamp': log.timestamp.isoformat(),
-        'event_type': log.event_type,
-        'process_name': log.process_name,
-        'pid': log.pid,
-        'ppid': log.ppid,
-        'user': log.user,
-        'command_line': log.command_line,
-        'local_address': log.local_address,
-        'local_port': log.local_port,
-        'remote_address': log.remote_address,
-        'remote_port': log.remote_port,
-        'file_path': log.file_path,
-        'file_size': log.file_size,
-        'last_modified': log.last_modified.isoformat() if log.last_modified else None,
-        'cpu_usage': log.cpu_usage,
-        'memory_usage': log.memory_usage,
-        'disk_usage': log.disk_usage,
-        'severity': log.severity,
-        'hostname': log.hostname,
-        'mitre_technique': log.mitre_technique
-    } for log in logs])
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    selected_date = request.args.get('date', None)
+
+    query = Log.query.order_by(Log.timestamp.desc())
+
+    if selected_date:
+        try:
+            # Parse date and create datetime range in UTC
+            start_of_day = datetime.strptime(selected_date, '%Y-%m-%d').replace(
+                tzinfo=timezone('UTC'))
+            end_of_day = start_of_day + timedelta(days=1)
+            query = query.filter(Log.timestamp >= start_of_day, 
+                               Log.timestamp < end_of_day)
+        except ValueError as e:
+            app.logger.error(f"Error parsing date: {e}")
+
+    paginated_logs = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    logs_data = []
+    for log in paginated_logs.items:
+        try:
+            logs_data.append({
+                'timestamp': convert_utc_to_ist(log.timestamp),
+                'event_type': log.event_type,
+                'process_name': log.process_name,
+                'user': log.user,
+                'command_line': log.command_line,
+                'local_address': log.local_address,
+                'local_port': log.local_port,
+                'remote_address': log.remote_address,
+                'remote_port': log.remote_port,
+                'file_path': log.file_path,
+                'file_size': log.file_size,
+                'last_modified': convert_utc_to_ist(log.last_modified) if log.last_modified else None,
+                'severity': log.severity,
+                'hostname': log.hostname,
+                'mitre_technique': log.mitre_technique,
+                'network_connection': log.network_connection
+            })
+        except Exception as e:
+            app.logger.error(f"Error processing log {log.id}: {e}")
+            continue
+
+    return jsonify({
+        'logs': logs_data,
+        'total_logs': paginated_logs.total,
+        'current_page': paginated_logs.page,
+        'per_page': paginated_logs.per_page
+    })
+
+@app.route('/export_logs')
+def export_logs():
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
+    
+    selected_date = request.args.get('date', None)
+    query = Log.query.order_by(Log.timestamp.desc())
+
+    if selected_date:
+        try:
+            start_of_day = datetime.strptime(selected_date, '%Y-%m-%d').replace(
+                tzinfo=timezone('UTC'))
+            end_of_day = start_of_day + timedelta(days=1)
+            query = query.filter(Log.timestamp >= start_of_day, 
+                               Log.timestamp < end_of_day)
+        except ValueError as e:
+            app.logger.error(f"Error parsing date: {e}")
+
+    logs = query.all()
+    # ... rest of CSV generation code ...
+         
 
 @app.route('/view_logs')
 def view_logs():
@@ -272,7 +321,7 @@ def ingest_logs():
     alerts = []
     for item in data:
         log = Log(
-            timestamp=parse_datetime(item['timestamp']),
+            timestamp=parse_datetime(item['timestamp']),  # Assuming parse_datetime returns UTC
             event_type=item.get('event_type'),
             process_name=item.get('process_name'),
             pid=item.get('pid'),
@@ -282,6 +331,7 @@ def ingest_logs():
             local_address=item.get('local_address'),
             local_port=item.get('local_port'),
             remote_address=item.get('remote_address'),
+            network_connection=item.get('network_connection'),
             remote_port=item.get('remote_port'),
             file_path=item.get('file_path'),
             file_size=item.get('file_size'),
@@ -293,6 +343,7 @@ def ingest_logs():
             hostname=item.get('hostname'),
             mitre_technique=item.get('mitre_technique')
         )
+        
         db.session.add(log)
         generated_alerts = rule_engine.evaluate(item)
         for alert in generated_alerts:

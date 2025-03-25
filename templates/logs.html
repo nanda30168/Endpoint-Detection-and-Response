@@ -10,8 +10,8 @@
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text */
         }
         header {
             background: linear-gradient(to right, #0d47a1, #1976d2, #0d47a1);
@@ -30,20 +30,28 @@
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
+            background-color: #1e1e1e; /* Dark table background */
+            color: #e0e0e0; /* Light text */
         }
         .logs-table th, .logs-table td {
             padding: 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #333; /* Darker border */
             text-align: left;
         }
         .logs-table th {
-            background-color: #0d47a1;
+            background-color: #0d47a1; /* Blue header */
             color: #fff;
+        }
+        .logs-table tr:nth-child(even) {
+            background-color: #2a2a2a; /* Alternate row color */
+        }
+        .logs-table tr:hover {
+            background-color: #333; /* Hover effect */
         }
         .download-button {
             margin: 20px 0;
             padding: 10px 20px;
-            background-color: #1976d2;
+            background-color: #1976d2; /* Blue button */
             color: #fff;
             border: none;
             cursor: pointer;
@@ -51,82 +59,190 @@
             font-size: 1em;
         }
         .download-button:hover {
-            background-color: #0d47a1;
+            background-color: #0d47a1; /* Darker blue on hover */
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            margin: 0 5px;
+            padding: 10px 15px;
+            background-color: #1976d2;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .pagination button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        #datePicker {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #1976d2;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
         }
     </style>
     <script>
-        function fetchLogs() {
-            fetch('/logs')
-                .then(response => response.json())
-                .then(data => {
-                    updateTable(data);
-                })
-                .catch(error => console.error('Error fetching logs:', error));
-        }
+        let currentPage = 1;
+        const logsPerPage = 50; // Number of logs per page
 
-        function updateTable(data) {
-            const logsContainer = document.getElementById('logs');
-            logsContainer.innerHTML = ''; // Clear existing logs
-            const table = document.createElement('table');
-            table.classList.add('logs-table');
-            const thead = document.createElement('thead');
-            const tbody = document.createElement('tbody');
+        function fetchLogs(page) {
+    const selectedDate = document.getElementById('datePicker').value;
+    fetch(`/logs?page=${page}&per_page=${logsPerPage}&date=${selectedDate}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.logs && data.logs.length > 0) {
+                updateTable(data.logs);
+                updatePagination(data.total_logs, page, data.per_page);
+            } else {
+                document.getElementById('logs').innerHTML = '<p>No logs found for the selected date.</p>';
+                document.getElementById('pagination').innerHTML = '';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching logs:', error);
+            document.getElementById('logs').innerHTML = '<p>Error loading logs. Please try again.</p>';
+        });
+}
 
-            thead.innerHTML = `
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Event Type</th>
-                    <th>Process Name</th>
-                    <th>User</th>
-                    <th>Command Line</th>
-                    <th>Local Address</th>
-                    <th>Local Port</th>
-                    <th>Remote Address</th>
-                    <th>Remote Port</th>
-                    <th>File Path</th>
-                    <th>File Size</th>
-                    <th>Last Modified</th>
-                    <th>Severity</th>
-                    <th>Hostname</th>
-                    <th>MITRE Technique</th>
-                </tr>
-            `;
+function updatePagination(totalLogs, currentPage, perPage) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
 
-            data.forEach(log => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${new Date(log.timestamp).toLocaleString()}</td>
-                    <td>${log.event_type}</td>
-                    <td>${log.process_name || 'N/A'}</td>
-                    <td>${log.user || 'N/A'}</td>
-                    <td>${log.command_line || 'N/A'}</td>
-                    <td>${log.local_address || 'N/A'}</td>
-                    <td>${log.local_port || 'N/A'}</td>
-                    <td>${log.remote_address || 'N/A'}</td>
-                    <td>${log.remote_port || 'N/A'}</td>
-                    <td>${log.file_path || 'N/A'}</td>
-                    <td>${log.file_size || 'N/A'}</td>
-                    <td>${log.last_modified ? new Date(log.last_modified).toLocaleString() : 'N/A'}</td>
-                    <td>${log.severity || 'N/A'}</td>
-                    <td>${log.hostname || 'N/A'}</td>
-                    <td>${log.mitre_technique || 'N/A'}</td>
-                `;
-                tbody.appendChild(row);
-            });
+    const totalPages = Math.ceil(totalLogs / perPage);
 
-            table.appendChild(thead);
-            table.appendChild(tbody);
-            logsContainer.appendChild(table);
+    const prevButton = document.createElement('button');
+    prevButton.textContent = 'Previous';
+    prevButton.disabled = currentPage === 1;
+    prevButton.onclick = () => {
+        currentPage--;
+        fetchLogs(currentPage);
+    };
+    pagination.appendChild(prevButton);
+
+    // Add page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.textContent = i;
+        pageButton.disabled = i === currentPage;
+        pageButton.onclick = () => fetchLogs(i);
+        pagination.appendChild(pageButton);
+    }
+
+    const nextButton = document.createElement('button');
+    nextButton.textContent = 'Next';
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.onclick = () => {
+        currentPage++;
+        fetchLogs(currentPage);
+    };
+    pagination.appendChild(nextButton);
+}
+
+function updateTable(logs) {
+    const logsContainer = document.getElementById('logs');
+    logsContainer.innerHTML = '';
+    const table = document.createElement('table');
+    table.classList.add('logs-table');
+    const thead = document.createElement('thead');
+    const tbody = document.createElement('tbody');
+
+    thead.innerHTML = `
+        <tr>
+            <th>Timestamp</th>
+            <th>Event Type</th>
+            <th>Process Name</th>
+            <th>User</th>
+            <th>Command Line</th>
+            <th>Local Address</th>
+            <th>Local Port</th>
+            <th>Remote Address</th>
+            <th>Remote Port</th>
+            <th>File Path</th>
+            <th>File Size</th>
+            <th>Last Modified</th>
+            <th>Severity</th>
+            <th>Hostname</th>
+            <th>MITRE Technique</th>
+            <th>Network Connection</th>
+        </tr>
+    `;
+
+    logs.forEach(log => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${log.timestamp || 'N/A'}</td>
+            <td>${log.event_type || 'N/A'}</td>
+            <td>${log.process_name || 'N/A'}</td>
+            <td>${log.user || 'N/A'}</td>
+            <td>${log.command_line || 'N/A'}</td>
+            <td>${log.local_address || 'N/A'}</td>
+            <td>${log.local_port || 'N/A'}</td>
+            <td>${log.remote_address || 'N/A'}</td>
+            <td>${log.remote_port || 'N/A'}</td>
+            <td>${log.file_path || 'N/A'}</td>
+            <td>${log.file_size || 'N/A'}</td>
+            <td>${log.last_modified || 'N/A'}</td>
+            <td>${log.severity || 'N/A'}</td>
+            <td>${log.hostname || 'N/A'}</td>
+            <td>${log.mitre_technique || 'N/A'}</td>
+            <td>${log.network_connection || 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    logsContainer.appendChild(table);
+}
+
+            
+                 
+        function updatePagination(totalLogs) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            const totalPages = Math.ceil(totalLogs / logsPerPage);
+
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'Previous';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                currentPage--;
+                fetchLogs(currentPage);
+            };
+            pagination.appendChild(prevButton);
+
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'Next';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                currentPage++;
+                fetchLogs(currentPage);
+            };
+            pagination.appendChild(nextButton);
         }
 
         function downloadCSV() {
-            fetch('/logs')
+            const selectedDate = document.getElementById('datePicker').value;
+            fetch(`/logs?date=${selectedDate}`)
                 .then(response => response.json())
                 .then(data => {
                     const csvContent = [
-                        ['Timestamp', 'Event Type', 'Process Name', 'User', 'Command Line', 'Local Address', 'Local Port', 'Remote Address', 'Remote Port', 'File Path', 'File Size', 'Last Modified', 'Severity', 'Hostname', 'MITRE Technique'],
-                        ...data.map(log => [
-                            new Date(log.timestamp).toLocaleString(),
+                        ['Timestamp', 'Event Type', 'Process Name', 'User', 'Command Line', 'Local Address', 'Local Port', 'Remote Address', 'Remote Port', 'File Path', 'File Size', 'Last Modified', 'Severity', 'Hostname', 'MITRE Technique', 'Network Connection'],
+                        ...data.logs.map(log => [
+                            log.timestamp,
                             log.event_type,
                             log.process_name || 'N/A',
                             log.user || 'N/A',
@@ -137,10 +253,11 @@
                             log.remote_port || 'N/A',
                             log.file_path || 'N/A',
                             log.file_size || 'N/A',
-                            log.last_modified ? new Date(log.last_modified).toLocaleString() : 'N/A',
+                            log.last_modified || 'N/A',
                             log.severity || 'N/A',
                             log.hostname || 'N/A',
-                            log.mitre_technique || 'N/A'
+                            log.mitre_technique || 'N/A',
+                            log.network_connection || 'N/A'
                         ])
                     ].map(e => e.join(",")).join("\n");
 
@@ -154,11 +271,13 @@
                 .catch(error => console.error('Error fetching logs:', error));
         }
 
-        // Fetch logs every 10 seconds
-        setInterval(fetchLogs, 10000);
-
         // Fetch logs on page load
-        window.onload = fetchLogs;
+        window.onload = () => {
+            const datePicker = document.getElementById('datePicker');
+            const today = new Date().toISOString().split('T')[0];
+            datePicker.value = today;  // Set default date to today
+            fetchLogs(currentPage);   // Fetch today's logs
+        };
     </script>
 </head>
 <body>
@@ -167,7 +286,9 @@
     </header>
     <div class="container">
         <button class="download-button" onclick="downloadCSV()">Download Logs as CSV</button>
+        <input type="date" id="datePicker" onchange="fetchLogs(1)">
         <div id="logs"></div>
+        <div id="pagination" class="pagination"></div>
     </div>
 </body>
 </html>
